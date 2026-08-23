@@ -1,0 +1,6 @@
+{
+  "name": "AK TRAVELTOURS",
+  "description": "AK TRAVELTOURS - Global travel tour packages, fixed 7-day, 10-day, 30-day, and unlimited travel eSIMs with official Stripe website checkout experience, 30-minute email delivery SLA, and separate full Admin Portal with Sign-up/Login to manage customer orders, inventory, and fraud risk.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
