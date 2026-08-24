@@ -2,13 +2,73 @@ import express from 'express';
 import Stripe from 'stripe';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const getDirname = () => {
+  try {
+    return path.dirname(fileURLToPath(import.meta.url));
+  } catch {
+    return process.cwd();
+  }
+};
+
+// Multi-path dotenv loader for Windows Server & Linux
+function loadEnvSafely() {
+  const currentDir = getDirname();
+  const possiblePaths = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(process.cwd(), '.env.txt'),
+    path.resolve(process.cwd(), 'env.txt'),
+    path.resolve(currentDir, '.env'),
+    path.resolve(currentDir, '..', '.env'),
+    path.resolve(currentDir, '..', '.env.txt'),
+  ];
+
+  for (const envPath of possiblePaths) {
+    try {
+      if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
+      }
+    } catch {
+      // Ignore file system read errors
+    }
+  }
+
+  // Also check for persisted stripe_keys.json
+  const possibleJsonPaths = [
+    path.resolve(process.cwd(), 'stripe_keys.json'),
+    path.resolve(currentDir, 'stripe_keys.json'),
+    path.resolve(currentDir, '..', 'stripe_keys.json'),
+  ];
+
+  for (const jsonPath of possibleJsonPaths) {
+    try {
+      if (fs.existsSync(jsonPath)) {
+        const content = fs.readFileSync(jsonPath, 'utf8');
+        const parsed = JSON.parse(content);
+        if (parsed.secretKey && !process.env.STRIPE_SECRET_KEY) {
+          process.env.STRIPE_SECRET_KEY = parsed.secretKey;
+        }
+        if (parsed.publishableKey && !process.env.STRIPE_PUBLISHABLE_KEY) {
+          process.env.STRIPE_PUBLISHABLE_KEY = parsed.publishableKey;
+        }
+      }
+    } catch {
+      // Ignore json read errors
+    }
+  }
+}
+
+loadEnvSafely();
 
 export const apiRouter = express.Router();
 
-// Dynamic Stripe Client loader (reads strictly from environment variables)
+// Dynamic Stripe Client loader (reads strictly from environment variables or json persistence)
 export function getStripe(): Stripe | null {
+  loadEnvSafely();
+
   const rawKey = (
     process.env.STRIPE_SECRET_KEY ||
     process.env.STRIPE_API_KEY ||
@@ -19,8 +79,8 @@ export function getStripe(): Stripe | null {
     ''
   ).trim();
 
-  // Strip any accidental wrapping quotes
-  const secretKey = rawKey.replace(/^['"]|['"]$/g, '').trim();
+  // Strip any accidental wrapping quotes or semicolons
+  const secretKey = rawKey.replace(/^['"]|['"]$/g, '').replace(/;$/, '').trim();
 
   if (!secretKey) {
     return null;
@@ -81,6 +141,100 @@ apiRouter.get('/stripe/config', (_req, res) => {
     supportEmail: 'support@aktraveltours.com',
     deliverySla: '30 Minutes strictly via Email',
   });
+});
+
+// 2b. Test Stripe Connection
+apiRouter.post('/stripe/test-connection', async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  try {
+    const { secretKey } = req.body || {};
+    const keyToTest = (secretKey || process.env.STRIPE_SECRET_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+
+    if (!keyToTest) {
+      return res.status(400).json({
+        success: false,
+        error: 'No Stripe Secret Key provided or configured on the server.',
+      });
+    }
+
+    const testStripe = new Stripe(keyToTest);
+    const balance = await testStripe.balance.retrieve();
+
+    return res.json({
+      success: true,
+      isLive: keyToTest.startsWith('sk_live_'),
+      mode: keyToTest.startsWith('sk_live_') ? 'Live Production Mode' : 'Sandbox Test Mode',
+      currencies: balance.available.map((b) => b.currency.toUpperCase()),
+      message: 'Stripe API connection verified successfully!',
+    });
+  } catch (err: any) {
+    return res.status(400).json({
+      success: false,
+      error: err?.message || 'Failed to authenticate with Stripe. Please verify your secret key.',
+    });
+  }
+});
+
+// 2c. Save Stripe Keys dynamically (updates process.env and persists to stripe_keys.json)
+apiRouter.post('/stripe/save-keys', async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  try {
+    const { secretKey, publishableKey } = req.body || {};
+    const cleanSecret = (secretKey || '').trim().replace(/^['"]|['"]$/g, '');
+    const cleanPublishable = (publishableKey || '').trim().replace(/^['"]|['"]$/g, '');
+
+    if (!cleanSecret) {
+      return res.status(400).json({
+        success: false,
+        error: 'Stripe Secret Key (sk_live_... or sk_test_...) is required.',
+      });
+    }
+
+    // Verify key with Stripe
+    const testStripe = new Stripe(cleanSecret);
+    const balance = await testStripe.balance.retrieve();
+
+    // Set process.env in memory immediately
+    process.env.STRIPE_SECRET_KEY = cleanSecret;
+    if (cleanPublishable) {
+      process.env.STRIPE_PUBLISHABLE_KEY = cleanPublishable;
+    }
+
+    // Persist to stripe_keys.json in workspace root
+    try {
+      const jsonPath = path.resolve(process.cwd(), 'stripe_keys.json');
+      fs.writeFileSync(
+        jsonPath,
+        JSON.stringify(
+          {
+            secretKey: cleanSecret,
+            publishableKey: cleanPublishable,
+            updatedAt: new Date().toISOString(),
+            isLive: cleanSecret.startsWith('sk_live_'),
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
+    } catch (saveErr) {
+      console.warn('Could not write stripe_keys.json:', saveErr);
+    }
+
+    return res.json({
+      success: true,
+      isLive: cleanSecret.startsWith('sk_live_'),
+      mode: cleanSecret.startsWith('sk_live_') ? 'Live Production Mode' : 'Sandbox Test Mode',
+      publishableKey: cleanPublishable,
+      currencies: balance.available.map((b) => b.currency.toUpperCase()),
+      message: 'Stripe keys validated, saved, and activated for live payments!',
+    });
+  } catch (err: any) {
+    return res.status(400).json({
+      success: false,
+      error: err?.message || 'Invalid Stripe Secret Key. Please check the key in your Stripe dashboard.',
+    });
+  }
 });
 
 // 3. Dynamic Stripe Checkout Session Creation with Exact Plan Price

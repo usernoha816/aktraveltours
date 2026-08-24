@@ -35,7 +35,10 @@ import {
   Plus,
   Copy,
   Link2,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  CheckCircle,
+  HelpCircle
 } from 'lucide-react';
 import { 
   ProvisionedEsim, 
@@ -117,6 +120,124 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Live Audit Logs State
   const [copiedUrl, setCopiedUrl] = useState(false);
+
+  // Stripe Live Gateway Manager State
+  const [stripeSecretKey, setStripeSecretKey] = useState('');
+  const [stripePublishableKey, setStripePublishableKey] = useState('');
+  const [showStripeSecret, setShowStripeSecret] = useState(false);
+  const [stripeGatewayConfig, setStripeGatewayConfig] = useState<{
+    isLive: boolean;
+    isConfigured: boolean;
+    publishableKey: string | null;
+    merchantName?: string;
+    domain?: string;
+  } | null>(null);
+  const [isSavingStripe, setIsSavingStripe] = useState(false);
+  const [isTestingStripe, setIsTestingStripe] = useState(false);
+  const [stripeFeedback, setStripeFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    currencies?: string[];
+    mode?: string;
+  } | null>(null);
+
+  // Load Stripe Config on mount
+  useEffect(() => {
+    fetch('/api/stripe/config')
+      .then((r) => r.json())
+      .then((data) => {
+        setStripeGatewayConfig(data);
+        if (data?.publishableKey) {
+          setStripePublishableKey(data.publishableKey);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleTestStripeConnection = async () => {
+    setIsTestingStripe(true);
+    setStripeFeedback(null);
+    try {
+      const res = await fetch('/api/stripe/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secretKey: stripeSecretKey || undefined }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStripeFeedback({
+          type: 'success',
+          message: data.message || 'Stripe API connection verified successfully!',
+          currencies: data.currencies,
+          mode: data.mode,
+        });
+      } else {
+        setStripeFeedback({
+          type: 'error',
+          message: data.error || 'Failed to authenticate with Stripe. Check your secret key.',
+        });
+      }
+    } catch (err: any) {
+      setStripeFeedback({
+        type: 'error',
+        message: err?.message || 'Network error while testing Stripe connection.',
+      });
+    } finally {
+      setIsTestingStripe(false);
+    }
+  };
+
+  const handleSaveStripeKeys = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripeSecretKey.trim()) {
+      setStripeFeedback({
+        type: 'error',
+        message: 'Please paste your Stripe Secret Key (sk_live_... or sk_test_...).',
+      });
+      return;
+    }
+
+    setIsSavingStripe(true);
+    setStripeFeedback(null);
+    try {
+      const res = await fetch('/api/stripe/save-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          secretKey: stripeSecretKey.trim(),
+          publishableKey: stripePublishableKey.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStripeFeedback({
+          type: 'success',
+          message: 'Stripe keys validated, saved, and activated for live payments!',
+          currencies: data.currencies,
+          mode: data.mode,
+        });
+        setStripeGatewayConfig({
+          isLive: data.isLive,
+          isConfigured: true,
+          publishableKey: data.publishableKey,
+          merchantName: 'AK TRAVELTOURS',
+          domain: 'aktraveltours.com',
+        });
+      } else {
+        setStripeFeedback({
+          type: 'error',
+          message: data.error || 'Failed to save Stripe keys.',
+        });
+      }
+    } catch (err: any) {
+      setStripeFeedback({
+        type: 'error',
+        message: err?.message || 'Network error while saving Stripe keys.',
+      });
+    } finally {
+      setIsSavingStripe(false);
+    }
+  };
 
   const copyAdminUrl = () => {
     try {
@@ -632,6 +753,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             { id: 'customers', label: 'Customer CRM', icon: <Users className="w-4 h-4" />, count: customersList.length },
             { id: 'inventory', label: 'eSIM Catalog & Plans', icon: <Globe className="w-4 h-4" /> },
             { id: 'analytics', label: 'Revenue & 30-Min SLA', icon: <BarChart3 className="w-4 h-4" /> },
+            { id: 'settings', label: 'Stripe Gateway & Keys', icon: <CreditCard className="w-4 h-4" /> },
             { id: 'audit-logs', label: 'System Audit Logs', icon: <Activity className="w-4 h-4" /> },
           ].map((tab) => (
             <button
@@ -1141,6 +1263,221 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-[10px] text-slate-500 block font-mono">Actor: {log.actor}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 6: STRIPE GATEWAY & ENVIRONMENT MANAGER */}
+        {/* ========================================================================= */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            {/* Header Card */}
+            <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-md">
+                    <CreditCard className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-white">Stripe Live Gateway & API Keys</h2>
+                    <p className="text-xs text-slate-400">
+                      Configure your official Stripe credentials to activate live customer credit card, Apple Pay, and Google Pay checkout.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                      stripeGatewayConfig?.isConfigured
+                        ? stripeGatewayConfig.isLive
+                          ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
+                          : 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                        : 'bg-slate-800 border border-slate-700 text-slate-400'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        stripeGatewayConfig?.isConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                      }`}
+                    />
+                    {stripeGatewayConfig?.isConfigured
+                      ? stripeGatewayConfig.isLive
+                        ? 'Stripe Live Gateway Active'
+                        : 'Stripe Sandbox Active'
+                      : 'Keys Not Configured (Instant Dispatch Mode)'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Gateway Status Banner */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Payment Gateway</span>
+                <span className="text-sm font-black text-white block">Official Stripe Hosted Checkout</span>
+                <span className="text-[11px] text-slate-400 font-mono">checkout.stripe.com</span>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Merchant Domain</span>
+                <span className="text-sm font-black text-emerald-400 block">aktraveltours.com</span>
+                <span className="text-[11px] text-slate-400">Merchant: AK TRAVELTOURS</span>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Fulfillment SLA</span>
+                <span className="text-sm font-black text-blue-400 block">&lt; 30 Minutes Guaranteed</span>
+                <span className="text-[11px] text-slate-400">Direct Email QR &amp; LPA Dispatch</span>
+              </div>
+            </div>
+
+            {/* Key Configuration Form Card */}
+            <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800 space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                  <h3 className="font-black text-base text-white">Live API Key Configuration</h3>
+                  <p className="text-xs text-slate-400">
+                    Paste your Stripe Secret and Publishable keys. This dynamically validates your connection with Stripe and saves your configuration instantly without restarting the server.
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback notification */}
+              {stripeFeedback && (
+                <div
+                  className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
+                    stripeFeedback.type === 'success'
+                      ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
+                      : 'bg-red-950/40 border-red-800 text-red-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold">
+                    {stripeFeedback.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    )}
+                    <span>{stripeFeedback.message}</span>
+                  </div>
+                  {stripeFeedback.mode && (
+                    <div className="text-[11px] text-slate-300 pl-6">
+                      Operating Mode: <strong className="text-white">{stripeFeedback.mode}</strong>
+                    </div>
+                  )}
+                  {stripeFeedback.currencies && stripeFeedback.currencies.length > 0 && (
+                    <div className="text-[11px] text-slate-300 pl-6">
+                      Available Balance Currencies: <span className="font-mono text-emerald-400">{stripeFeedback.currencies.join(', ')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveStripeKeys} className="space-y-4">
+                {/* Secret Key Input */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-300">
+                      Stripe Secret Key (sk_live_... or sk_test_...) <span className="text-red-400">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowStripeSecret(!showStripeSecret)}
+                      className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      {showStripeSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showStripeSecret ? 'Hide Key' : 'Reveal Key'}</span>
+                    </button>
+                  </div>
+                  <input
+                    type={showStripeSecret ? 'text' : 'password'}
+                    value={stripeSecretKey}
+                    onChange={(e) => setStripeSecretKey(e.target.value)}
+                    placeholder="sk_live_51P..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  />
+                  <span className="text-[11px] text-slate-500 block">
+                    Found in Stripe Dashboard &rarr; Developers &rarr; API keys &rarr; Standard keys (Secret key).
+                  </span>
+                </div>
+
+                {/* Publishable Key Input */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Stripe Publishable Key (pk_live_... or pk_test_...) <span className="text-slate-500 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={stripePublishableKey}
+                    onChange={(e) => setStripePublishableKey(e.target.value)}
+                    placeholder="pk_live_51P..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  />
+                  <span className="text-[11px] text-slate-500 block">
+                    Enables client-side Stripe.js acceleration and hosted payment redirection.
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleTestStripeConnection}
+                    disabled={isTestingStripe}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-700 hover:border-slate-600 text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isTestingStripe ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                        <span>Verifying with Stripe API...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Test API Connection</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSavingStripe}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingStripe ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Saving &amp; Activating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Save &amp; Activate Live Stripe Payments</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Documentation & Troubleshooting Guide */}
+            <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800 space-y-3 text-xs text-slate-300">
+              <h4 className="font-black text-sm text-white flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-blue-400" />
+                <span>Windows Server VPS Stripe Integration Notes</span>
+              </h4>
+              <ul className="list-disc list-inside space-y-1.5 text-slate-400 leading-relaxed">
+                <li>
+                  <strong>Dynamic Persistence:</strong> When you save your keys above, the server automatically tests the credentials against Stripe&apos;s live endpoints and writes them to <code className="text-blue-300 font-mono">stripe_keys.json</code> and active memory.
+                </li>
+                <li>
+                  <strong>No Restart Required:</strong> The checkout page on <strong className="text-white">aktraveltours.com</strong> will immediately detect the keys and route all customer orders through official Stripe Checkout.
+                </li>
+                <li>
+                  <strong>Apple Pay &amp; Google Pay:</strong> Enabled automatically on the Stripe Hosted Checkout page when using your live publishable and secret keys.
+                </li>
+              </ul>
             </div>
           </div>
         )}
