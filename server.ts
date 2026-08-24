@@ -1,22 +1,19 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { apiRouter } from './src/server/apiRouter';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Multi-path dotenv loader for Windows Server & Linux
+const currentDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 const envPaths = [
   path.resolve(process.cwd(), '.env'),
   path.resolve(process.cwd(), '.env.txt'),
   path.resolve(process.cwd(), 'env.txt'),
-  path.resolve(__dirname, '.env'),
-  path.resolve(__dirname, '..', '.env'),
-  path.resolve(__dirname, '..', '.env.txt'),
+  path.resolve(currentDir, '.env'),
+  path.resolve(currentDir, '..', '.env'),
+  path.resolve(currentDir, '..', '.env.txt'),
 ];
 
 for (const envPath of envPaths) {

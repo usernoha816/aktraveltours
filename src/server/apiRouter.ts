@@ -4,19 +4,10 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const getDirname = () => {
-  try {
-    return path.dirname(fileURLToPath(import.meta.url));
-  } catch {
-    return process.cwd();
-  }
-};
 
 // Multi-path dotenv loader for Windows Server & Linux
 function loadEnvSafely() {
-  const currentDir = getDirname();
+  const currentDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
   const possiblePaths = [
     path.resolve(process.cwd(), '.env'),
     path.resolve(process.cwd(), '.env.txt'),
