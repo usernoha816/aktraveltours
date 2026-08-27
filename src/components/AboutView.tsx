@@ -105,14 +105,32 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigateTab }) => {
 
       {/* Global Offices */}
       <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
-        <h3 className="text-xl font-black text-slate-900">Worldwide Headquarters &amp; Operations</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 className="text-xl font-black text-slate-900">Headquarters &amp; Global Contact</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="https://wa.me/447441421073"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 hover:bg-emerald-100 transition"
+            >
+              <span>WhatsApp: +44 7441 421073</span>
+            </a>
+            <a
+              href="mailto:support@aktraveltours.com"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 text-xs font-bold border border-blue-200 hover:bg-blue-100 transition"
+            >
+              <span>support@aktraveltours.com</span>
+            </a>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { city: 'New York HQ', country: 'United States', address: '450 Lexington Ave, Suite 2200, NY 10017' },
-            { city: 'London Office', country: 'United Kingdom', address: '1 Canada Square, Canary Wharf, E14 5AA' },
-            { city: 'Tokyo Hub', country: 'Japan', address: 'Roppongi Hills Mori Tower, Minato-ku, Tokyo' },
-            { city: 'Dubai Bureau', country: 'United Arab Emirates', address: 'DIFC Gate Precinct 4, Level 5, Dubai' },
+            { city: 'London HQ', country: 'United Kingdom', address: 'London, United Kingdom' },
+            { city: 'New York Hub', country: 'United States', address: '450 Lexington Ave, New York, NY 10017' },
+            { city: 'Tokyo Bureau', country: 'Japan', address: 'Roppongi Hills Mori Tower, Minato-ku, Tokyo' },
+            { city: 'Dubai Office', country: 'United Arab Emirates', address: 'DIFC Gate Precinct 4, Level 5, Dubai' },
           ].map((loc, idx) => (
             <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1 text-xs">
               <div className="flex items-center gap-2 text-slate-900 font-bold">

@@ -163,8 +163,90 @@ export default function App() {
     }
   }, [currentTab]);
 
-  // Currency
-  const [currency, setCurrency] = useState<CurrencyCode>('USD');
+  // Currency with IP Auto-Detection & Persistent User Selection
+  const [currency, setCurrency] = useState<CurrencyCode>(() => {
+    try {
+      const saved = localStorage.getItem('aktravel_user_selected_currency');
+      if (saved && ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'].includes(saved)) {
+        return saved as CurrencyCode;
+      }
+    } catch {
+      // ignore
+    }
+    return 'USD';
+  });
+
+  const handleCurrencyChange = (newCurrency: CurrencyCode) => {
+    setCurrency(newCurrency);
+    try {
+      localStorage.setItem('aktravel_user_selected_currency', newCurrency);
+    } catch (e) {
+      console.warn('Currency save error:', e);
+    }
+  };
+
+  // Automatically detect visitor currency by IP address on initial load
+  useEffect(() => {
+    const savedCurrency = localStorage.getItem('aktravel_user_selected_currency');
+    if (savedCurrency) {
+      // User has manually selected a currency preference before
+      return;
+    }
+
+    let isMounted = true;
+
+    const detectCurrencyByIp = async () => {
+      try {
+        const res = await safeFetchJson('/api/ip-currency');
+        if (isMounted && res.ok && res.data?.currency) {
+          const detected = res.data.currency as CurrencyCode;
+          if (['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'].includes(detected)) {
+            setCurrency(detected);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('IP currency detection error:', err);
+      }
+
+      // Fast Client Fallback based on browser timezone and locale
+      if (isMounted) {
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          const lang = navigator.language || '';
+
+          if (tz.includes('London') || lang.startsWith('en-GB')) {
+            setCurrency('GBP');
+          } else if (tz.includes('Tokyo') || lang.startsWith('ja')) {
+            setCurrency('JPY');
+          } else if (tz.includes('Australia') || tz.includes('Sydney') || tz.includes('Melbourne')) {
+            setCurrency('AUD');
+          } else if (tz.includes('Canada') || tz.includes('Toronto') || tz.includes('Vancouver')) {
+            setCurrency('CAD');
+          } else if (
+            tz.includes('Europe') || 
+            tz.includes('Paris') || 
+            tz.includes('Berlin') || 
+            tz.includes('Rome') || 
+            tz.includes('Madrid') || 
+            tz.includes('Amsterdam')
+          ) {
+            setCurrency('EUR');
+          } else {
+            setCurrency('USD');
+          }
+        } catch {
+          setCurrency('USD');
+        }
+      }
+    };
+
+    detectCurrencyByIp();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -643,7 +725,7 @@ export default function App() {
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
           currency={currency}
-          setCurrency={setCurrency}
+          setCurrency={handleCurrencyChange}
           cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
           openCart={() => setIsCartOpen(true)}
           walletCount={walletEsims.length}

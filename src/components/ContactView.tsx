@@ -10,7 +10,9 @@ import {
   HelpCircle,
   ShieldCheck,
   Smartphone,
-  CreditCard
+  CreditCard,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
 
 export const ContactView: React.FC = () => {
@@ -35,13 +37,13 @@ export const ContactView: React.FC = () => {
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold">
           <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
-          <span>24/7 Global Roaming Concierge</span>
+          <span>24/7 Global Traveler &amp; eSIM Support Desk</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
           We&apos;re Here to Help Your Journey
         </h1>
         <p className="text-sm sm:text-base text-slate-600">
-          Have questions about your travel eSIM QR code delivery, Stripe payment, or tour reservation? Our multi-lingual support engineers are on standby 24 hours a day.
+          Have questions about your travel eSIM QR code delivery, Stripe payment, or tour reservation? Connect directly with our London headquarters or reach our support team on WhatsApp and Email 24/7.
         </p>
       </div>
 
@@ -50,35 +52,71 @@ export const ContactView: React.FC = () => {
         {/* Contact Channels */}
         <div className="space-y-4">
           
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-              <Mail className="w-5 h-5" />
+          {/* WhatsApp Direct */}
+          <a
+            href="https://wa.me/447441421073"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block bg-emerald-50/80 hover:bg-emerald-100/90 p-6 rounded-3xl border border-emerald-200 shadow-xs transition group cursor-pointer"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/30">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-full group-hover:bg-emerald-200 transition">
+                <span>Chat Now</span>
+                <ExternalLink className="w-3 h-3" />
+              </span>
             </div>
-            <h3 className="font-black text-base text-slate-900">Email Roaming Desk</h3>
-            <p className="text-xs text-slate-500">Official inquiries &amp; eSIM QR delivery questions:</p>
-            <p className="text-xs font-mono font-bold text-blue-600">support@aktraveltours.com</p>
-            <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold inline-block">
+            <h3 className="font-black text-base text-slate-900 mt-3">WhatsApp Support</h3>
+            <p className="text-xs text-slate-600">Instant messaging for setup, questions &amp; orders:</p>
+            <p className="text-sm font-mono font-bold text-emerald-800 mt-1">+44 7441 421073</p>
+            <span className="text-[11px] text-emerald-700 mt-2 block font-medium">
+              ⚡ Available 24/7 • Instant Response
+            </span>
+          </a>
+
+          {/* Email Support */}
+          <a
+            href="mailto:support@aktraveltours.com"
+            className="block bg-white hover:bg-slate-50 p-6 rounded-3xl border border-slate-200 shadow-xs transition group cursor-pointer"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                <Mail className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1">
+                <span>Send Email</span>
+                <ExternalLink className="w-3 h-3" />
+              </span>
+            </div>
+            <h3 className="font-black text-base text-slate-900 mt-3">Email Roaming Desk</h3>
+            <p className="text-xs text-slate-500">Official inquiries &amp; eSIM QR delivery:</p>
+            <p className="text-xs font-mono font-bold text-blue-600 mt-1">support@aktraveltours.com</p>
+            <span className="text-[11px] text-slate-500 mt-2 block">
               Average reply &lt; 8 minutes
             </span>
-          </div>
+          </a>
 
+          {/* Office Address */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <PhoneCall className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
+              <MapPin className="w-5 h-5 text-blue-600" />
             </div>
-            <h3 className="font-black text-base text-slate-900">International Hotline</h3>
-            <p className="text-xs text-slate-500">Toll-free emergency traveler assistance:</p>
-            <p className="text-xs font-mono font-bold text-slate-900">+1 (800) 792-AKTOUR / +1 (800) 792-2586</p>
-            <span className="text-[11px] text-slate-500 block">Available 24 hours a day, 7 days a week</span>
+            <h3 className="font-black text-base text-slate-900">Headquarters Address</h3>
+            <p className="text-xs text-slate-500">Registered Office &amp; Operations:</p>
+            <p className="text-xs font-bold text-slate-900">London, United Kingdom</p>
+            <span className="text-[11px] text-slate-500 block">AK TRAVELTOURS LTD • UK Registered Tour &amp; Telecom Operator</span>
           </div>
 
+          {/* Delivery SLA Note */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
             <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="font-black text-base text-slate-900">30-Minute Delivery SLA</h3>
+            <h3 className="font-black text-base text-slate-900">30-Minute Email Delivery</h3>
             <p className="text-xs text-slate-500">
-              Orders confirmed by admin are dispatched via email within 30 minutes. If you have not received your email, please check your spam folder or contact us.
+              Orders confirmed by admin are dispatched via email from <strong>support@aktraveltours.com</strong> within 30 minutes. If you have not received your email, check your spam or WhatsApp us directly.
             </p>
           </div>
 
@@ -91,18 +129,40 @@ export const ContactView: React.FC = () => {
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
               <h3 className="text-xl font-black text-slate-900">Ticket Submitted Successfully!</h3>
               <p className="text-xs text-slate-600 max-w-md mx-auto">
-                We have assigned your inquiry to our priority telecom dispatch queue. An engineer will follow up with you at <strong>{formData.email}</strong> shortly.
+                We have assigned your inquiry to our priority telecom dispatch queue. An engineer will follow up with you at <strong>{formData.email}</strong> shortly, or you can message us directly on WhatsApp at <strong>+44 7441 421073</strong>.
               </p>
-              <button
-                onClick={() => setTicketSubmitted(false)}
-                className="px-5 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl"
-              >
-                Submit Another Request
-              </button>
+              <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="https://wa.me/447441421073"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Chat on WhatsApp (+44 7441 421073)</span>
+                </a>
+                <button
+                  onClick={() => setTicketSubmitted(false)}
+                  className="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl"
+                >
+                  Submit Another Request
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <h2 className="text-xl font-black text-slate-900">Submit a Priority Support Request</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <h2 className="text-xl font-black text-slate-900">Submit a Priority Support Request</h2>
+                <a
+                  href="https://wa.me/447441421073"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl font-bold border border-emerald-200 transition"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Fast Track: WhatsApp +447441421073</span>
+                </a>
+              </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -172,7 +232,7 @@ export const ContactView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/30 transition"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/30 transition cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>Submit Support Ticket</span>

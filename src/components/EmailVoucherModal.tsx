@@ -221,8 +221,15 @@ export const EmailVoucherModal: React.FC<EmailVoucherModalProps> = ({ esim, onCl
             </div>
 
             {/* Footer Support Info */}
-            <div className="pt-4 border-t border-slate-200 text-center text-slate-500 text-xs">
-              <p>Need assistance while traveling? Contact our 24/7 roaming support at <strong>support@aktraveltours.com</strong></p>
+            <div className="pt-4 border-t border-slate-200 text-center text-slate-500 text-xs space-y-1">
+              <p>
+                Need assistance while traveling? Contact 24/7 support at{' '}
+                <strong className="text-blue-600">support@aktraveltours.com</strong> or WhatsApp{' '}
+                <strong className="text-emerald-700">+44 7441 421073</strong>
+              </p>
+              <p className="text-[11px] text-slate-400">
+                AK TRAVELTOURS LTD • London, United Kingdom • GSMA RSP Certified Partner
+              </p>
             </div>
 
           </div>

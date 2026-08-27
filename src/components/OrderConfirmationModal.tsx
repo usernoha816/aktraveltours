@@ -11,7 +11,9 @@ import {
   HelpCircle,
   Smartphone,
   Globe,
-  Plane
+  Plane,
+  MessageCircle,
+  ExternalLink
 } from 'lucide-react';
 import { ProvisionedEsim } from '../types';
 
@@ -85,19 +87,32 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/30">
                 <Mail className="w-6 h-6" />
               </div>
-              <div>
-                <span className="text-[11px] font-black text-blue-900 uppercase tracking-wider block">
-                  Delivery Method: Strictly via Email
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 leading-snug">
-                  Your eSIM QR Code will arrive in your email within 30 minutes
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black text-blue-900 uppercase tracking-wider block">
+                    Delivery Method: Email Only
+                  </span>
+                  <span className="text-[10px] bg-blue-200/80 text-blue-950 font-bold px-2 py-0.5 rounded-full">
+                    No On-Screen QR Code
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+                  Your eSIM will be sent to your email via <span className="text-blue-700 font-mono underline decoration-blue-300">support@aktraveltours.com</span>
                 </h3>
-                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Thank you for your order! Your payment was successfully processed. For security and quality verification, your high-speed 5G eSIM activation QR code is being generated and will be sent directly to:
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Payment confirmed! To ensure profile security and GSMA activation compliance, <strong>no QR code or eSIM credentials are displayed on this screen</strong>. Your digital eSIM profile, high-resolution QR voucher, and quick setup guide will be dispatched directly to your inbox:
                 </p>
-                <div className="mt-3 inline-flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-blue-200 text-xs font-black text-blue-950 font-mono shadow-xs">
-                  <Mail className="w-4 h-4 text-blue-600" />
-                  <span>{esim.customerEmail}</span>
+
+                <div className="pt-2 flex flex-wrap items-center gap-2.5">
+                  <div className="inline-flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-blue-200 text-xs font-black text-blue-950 font-mono shadow-xs">
+                    <Mail className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>{esim.customerEmail}</span>
+                  </div>
+
+                  <div className="inline-flex items-center gap-1.5 bg-blue-900 text-white px-3 py-2 rounded-xl text-xs font-bold font-mono">
+                    <span className="text-slate-300 text-[10px]">From:</span>
+                    <span className="text-blue-200">support@aktraveltours.com</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -106,7 +121,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
             <div className="bg-white p-3.5 rounded-xl border border-blue-100 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
-                <span className="font-bold text-slate-700">Guaranteed Delivery Window:</span>
+                <span className="font-bold text-slate-700">Guaranteed Delivery SLA:</span>
               </div>
               <div className="font-mono font-black text-xs sm:text-sm text-blue-700 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200">
                 Within 30 Minutes ({timeFormatted} min)
@@ -133,7 +148,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           {/* What to do next steps */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Next Steps for Activation
+              What Happens Next:
             </h4>
 
             <div className="space-y-2.5">
@@ -142,9 +157,9 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   1
                 </span>
                 <div>
-                  <span className="font-bold text-slate-900 block">Check your inbox &amp; spam folder</span>
+                  <span className="font-bold text-slate-900 block">Watch your email inbox from support@aktraveltours.com</span>
                   <span className="text-[11px] text-slate-500 leading-relaxed">
-                    Look for an email from <strong>support@aktraveltours.com</strong> containing your high-resolution eSIM QR code and SM-DP+ activation code.
+                    Within 30 minutes, an automated message with your high-res eSIM QR code and SM-DP+ code will arrive from <strong>support@aktraveltours.com</strong>.
                   </span>
                 </div>
               </div>
@@ -154,9 +169,9 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   2
                 </span>
                 <div>
-                  <span className="font-bold text-slate-900 block">Scan QR code on your phone</span>
+                  <span className="font-bold text-slate-900 block">Scan the QR code from the email</span>
                   <span className="text-[11px] text-slate-500 leading-relaxed">
-                    Go to Settings &gt; Cellular / Mobile Data &gt; Add eSIM and scan the QR code received in your email.
+                    Open the email on another screen or print it, then navigate on your phone to <strong>Settings &gt; Cellular / Mobile Data &gt; Add eSIM</strong> and scan.
                   </span>
                 </div>
               </div>
@@ -166,9 +181,9 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   3
                 </span>
                 <div>
-                  <span className="font-bold text-slate-900 block">Turn on Data Roaming at destination</span>
+                  <span className="font-bold text-slate-900 block">Turn on Data Roaming upon arrival</span>
                   <span className="text-[11px] text-slate-500 leading-relaxed">
-                    Once you land at your destination, toggle on Data Roaming to automatically connect to Tier-1 local 5G/4G networks.
+                    When you arrive in {esim.destinationName}, switch your mobile data line to this eSIM and toggle Data Roaming on.
                   </span>
                 </div>
               </div>
@@ -179,9 +194,20 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
 
         {/* Footer Actions */}
         <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>AK TRAVELTOURS 100% Delivery SLA Guarantee</span>
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>100% Delivery SLA Guarantee</span>
+            </div>
+            <a
+              href="https://wa.me/447441421073"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-100/70 hover:bg-emerald-200/80 px-2.5 py-1 rounded-lg font-bold transition text-[11px]"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp: +44 7441 421073</span>
+            </a>
           </div>
 
           <button

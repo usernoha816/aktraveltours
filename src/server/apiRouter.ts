@@ -116,6 +116,93 @@ apiRouter.get('/health', (_req, res) => {
   });
 });
 
+// 1b. Geolocation & IP-based Currency Auto-Detection
+apiRouter.get('/ip-currency', async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+
+  try {
+    // 1. Check direct Cloud / CDN GeoIP headers first
+    const directCountry = (
+      (req.headers['cf-ipcountry'] as string) ||
+      (req.headers['x-country-code'] as string) ||
+      (req.headers['x-appengine-country'] as string) ||
+      (req.headers['cloudfront-viewer-country'] as string) ||
+      ''
+    ).trim().toUpperCase();
+
+    // 2. Extract Client IP
+    const forwarded = (req.headers['x-forwarded-for'] as string) || '';
+    const rawIp = forwarded.split(',')[0].trim() || (req.socket?.remoteAddress || '').trim();
+    const clientIp = rawIp.replace(/^::ffff:/, '').replace(/^\[|\]$/g, '');
+
+    let countryCode = directCountry;
+
+    // Eurozone countries set
+    const euroCountries = new Set([
+      'AT', 'BE', 'CY', 'EE', 'FI', 'FR', 'DE', 'GR', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT',
+      'NL', 'PT', 'SK', 'SI', 'ES', 'MC', 'ME', 'SM', 'VA', 'AD', 'XK', 'HR', 'EU', 'NO', 'CH', 'SE', 'DK', 'PL', 'CZ', 'HU', 'RO', 'BG'
+    ]);
+
+    // If country is not in CDN headers and IP is not a local/private address, query IP Geo API
+    const isPrivateIp = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('10.') || clientIp.startsWith('192.168.') || clientIp.startsWith('172.16.') || clientIp.startsWith('172.17.') || clientIp.startsWith('172.18.') || clientIp.startsWith('172.19.') || clientIp.startsWith('172.2') || clientIp.startsWith('172.3');
+
+    if (!countryCode && !isPrivateIp) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1800);
+
+        const geoRes = await fetch(`https://ipapi.co/${clientIp}/json/`, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'aktraveltours-geoip' }
+        });
+        clearTimeout(timeoutId);
+
+        if (geoRes.ok) {
+          const geoData: any = await geoRes.json();
+          if (geoData?.country_code) {
+            countryCode = geoData.country_code.toUpperCase();
+          }
+        }
+      } catch {
+        // Fallback gracefully on timeout
+      }
+    }
+
+    // 3. Map Country Code to supported Currency
+    let detectedCurrency: 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'CAD' = 'USD';
+
+    if (countryCode === 'GB' || countryCode === 'UK' || countryCode === 'IM' || countryCode === 'JE' || countryCode === 'GG') {
+      detectedCurrency = 'GBP';
+    } else if (countryCode === 'JP') {
+      detectedCurrency = 'JPY';
+    } else if (countryCode === 'AU' || countryCode === 'NZ') {
+      detectedCurrency = 'AUD';
+    } else if (countryCode === 'CA') {
+      detectedCurrency = 'CAD';
+    } else if (euroCountries.has(countryCode)) {
+      detectedCurrency = 'EUR';
+    } else {
+      detectedCurrency = 'USD';
+    }
+
+    return res.json({
+      success: true,
+      clientIp: isPrivateIp ? 'local' : clientIp,
+      countryCode: countryCode || 'US',
+      currency: detectedCurrency,
+      detectedVia: directCountry ? 'cdn-header' : countryCode ? 'ip-lookup' : 'default-fallback',
+    });
+  } catch (err: any) {
+    return res.json({
+      success: true,
+      clientIp: 'unknown',
+      countryCode: 'US',
+      currency: 'USD',
+      detectedVia: 'error-fallback',
+    });
+  }
+});
+
 // 2. Stripe Config
 apiRouter.get('/stripe/config', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');

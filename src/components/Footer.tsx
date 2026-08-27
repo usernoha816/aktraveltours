@@ -11,7 +11,8 @@ import {
   Compass,
   Plane,
   Clock,
-  Zap
+  Zap,
+  MessageCircle
 } from 'lucide-react';
 import { PageTab } from '../types';
 
@@ -64,18 +65,27 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab }) => {
               Global travel experiences and high-speed digital eSIMs with 7-Day, 10-Day, 30-Day, and Unlimited 5G plans. Automated delivery strictly via email within 30 minutes after admin review.
             </p>
             
-            <div className="space-y-1.5 text-[11px] text-slate-400">
+            <div className="space-y-2 text-[11px] text-slate-300">
               <div className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span>450 Lexington Ave, Suite 2200, New York, NY 10017</span>
+                <span>London, United Kingdom</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span>support@aktraveltours.com</span>
+                <a href="mailto:support@aktraveltours.com" className="hover:text-blue-400 transition font-mono">
+                  support@aktraveltours.com
+                </a>
               </div>
               <div className="flex items-center gap-2">
-                <PhoneCall className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span>+1 (800) 792-AKTOUR (24/7 Hotline)</span>
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <a 
+                  href="https://wa.me/447441421073" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-400 transition font-mono font-bold text-emerald-300"
+                >
+                  WhatsApp: +44 7441 421073
+                </a>
               </div>
             </div>
           </div>
