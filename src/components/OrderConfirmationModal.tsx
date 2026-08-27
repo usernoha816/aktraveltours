@@ -61,7 +61,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="font-black text-lg text-white">Order Confirmed!</h2>
                 <span className="bg-emerald-900/90 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-700">
-                  Stripe Payment Verified
+                  Manual Order Registered
                 </span>
               </div>
               <p className="text-xs text-slate-300">
@@ -141,7 +141,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
               </div>
             </div>
             <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg text-[11px]">
-              Paid via Stripe
+              {esim.paymentMethod || 'Manual Payment'}
             </span>
           </div>
 

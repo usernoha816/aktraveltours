@@ -527,8 +527,13 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  // Instant Sandbox / Express Order Dispatch Flow
-  const handleInstantCheckout = async (customerEmail: string, customerName?: string) => {
+  // Manual Payment & Instant Order Dispatch Flow
+  const handleInstantCheckout = async (
+    customerEmail: string, 
+    customerName?: string,
+    notes?: string,
+    method?: string
+  ) => {
     setIsProcessingCheckout(true);
 
     try {
@@ -543,9 +548,9 @@ export default function App() {
             item.plan,
             cleanEmail,
             cleanName,
-            'credit_card',
-            '8899',
-            'Instant Order Dispatch'
+            'manual_payment',
+            'Manual',
+            method || 'Manual Payment (Bank Transfer / WhatsApp)'
           );
           newProvisioned.push(esim);
         }
@@ -559,7 +564,7 @@ export default function App() {
         setConfirmedOrderEsim(newProvisioned[0]);
       }
     } catch (err) {
-      console.error('Instant checkout error:', err);
+      console.error('Manual order checkout error:', err);
     } finally {
       setIsProcessingCheckout(false);
     }

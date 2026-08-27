@@ -85,18 +85,21 @@ export async function provisionEsimProfile(
   const riskScore = Math.floor(Math.random() * 18) + 4; // default low risk 4-22
   const riskLevel: 'normal' | 'elevated' | 'high_risk' = riskScore > 75 ? 'high_risk' : riskScore > 50 ? 'elevated' : 'normal';
 
-  let paymentMethodLabel = 'Credit Card (Stripe)';
-  let stripePaymentId = `ch_stripe_${Math.random().toString(36).substring(2, 12)}`;
+  let paymentMethodLabel = 'Manual Payment (Bank Transfer / Faster Payments)';
+  let stripePaymentId: string | undefined = undefined;
   let paypalTransactionId: string | undefined = undefined;
 
-  if (paymentMethodType === 'paypal') {
-    paymentMethodLabel = 'PayPal Express Checkout';
-    paypalTransactionId = `PAYID-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-    stripePaymentId = undefined as any;
+  if (paymentMethodType === 'manual_whatsapp') {
+    paymentMethodLabel = 'Manual Payment (WhatsApp Direct +447441421073)';
+  } else if (paymentMethodType === 'manual_bank' || paymentMethodType === 'manual_payment') {
+    paymentMethodLabel = cardBrand && cardBrand !== 'Visa' ? cardBrand : 'Manual Payment (UK Faster Payments / Bank Wire)';
+  } else if (paymentMethodType === 'paypal') {
+    paymentMethodLabel = 'PayPal Direct Manual Payment';
+    paypalTransactionId = `MANUAL-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
   } else if (paymentMethodType === 'store_credit') {
     paymentMethodLabel = 'Store Travel Credit';
   } else {
-    paymentMethodLabel = `Credit Card (${cardBrand} via Stripe)`;
+    paymentMethodLabel = cardBrand || 'Manual Payment (Settlement Pending)';
   }
 
   return {

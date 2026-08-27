@@ -58,7 +58,7 @@ export interface StripeCardDetails {
   country?: string;
 }
 
-export type PaymentMethodType = 'credit_card' | 'store_credit' | 'paypal';
+export type PaymentMethodType = 'credit_card' | 'store_credit' | 'paypal' | 'manual_payment' | 'manual_bank' | 'manual_whatsapp';
 
 export type OrderStatus = 
   | 'payment_successful'
